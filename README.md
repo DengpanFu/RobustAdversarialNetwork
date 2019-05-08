@@ -1,2 +1,2 @@
 # RobustAdversarialNetwork
-A pytorch re-implementation for paper "TOWARDS DEEP LEARNING MODELS RESISTANT TO ADVERSARIAL ATTACKS"
+A pytorch re-implementation for paper "Towards Deep Learning Models Resistant to Adversarial Attacks"
