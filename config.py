@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument('--k',                  dest='k', 
                         type=int,               default=40, 
                         help='the number of PGD iterations used by the adversary')
-    parser.add_argument('--a',                  dest='a', 
+    parser.add_argument('--alpha',              dest='alpha', 
                         type=float,             default=0.01, 
                         help='the size of the PGD adversary steps')
     parser.add_argument('--random_start',       dest='random_start', 
