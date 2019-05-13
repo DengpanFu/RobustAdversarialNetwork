@@ -14,7 +14,6 @@ from time import gmtime, strftime
 
 import torch
 import torch.nn as nn
-from torchvision import datasets, transforms
 from torch.backends import cudnn
 from tensorboardX import SummaryWriter
 
@@ -49,8 +48,9 @@ if __name__ == '__main__':
 
     print("Input Args: ")
     pprint.pprint(cfg)
-    train_loader, test_loader = get_data_loader(data_dir=cfg.data_dir, 
-        batch_size=cfg.batch_size, test_batch_size=cfg.eval_batch_size, num_workers=4)
+    train_loader, test_loader, num_class, img_size = get_data_loader(
+        data_name=cfg.data_name, data_dir=cfg.data_dir, batch_size=cfg.batch_size, 
+        test_batch_size=cfg.eval_batch_size, num_workers=4)
 
     model = Model()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr, 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         is_cuda = True
 
     attack = LinfPGDAttack(model=model, epsilon=cfg.epsilon, k=cfg.k, 
-                           alpha=cfg.alpha, random_start=cfg.random_start)
+                           a=cfg.alpha, random_start=cfg.random_start)
     trainer = Trainer(model=model, attack=attack, optimizer=optimizer, 
                       summary_writer=summary_writer, is_cuda=True, 
                       output_freq=cfg.output_freq, print_freq=cfg.print_freq)
