@@ -25,25 +25,20 @@ def parse_args():
     parser.add_argument('--no_log',             dest='no_log',
                         action='store_true',
                         help="if record logs (do not log)")
-    # training settings
+    # dataset settings
+    parser.add_argument('--data_name',          dest='data_name', 
+                        type=str,               default='mnist', 
+                        help='used dataset')
     parser.add_argument('--data_dir',           dest='data_dir', 
                         type=str,               default='data/mnist', 
                         help='data directory')
+    # training settings
     parser.add_argument('--max_epoch',          dest='max_epoch', 
                         type=int,               default=100, 
                         help='max train steps')
     parser.add_argument('--lr',                 dest='lr', 
                         type=float,             default=0.0001, 
                         help='learning rate')
-    parser.add_argument('--print_freq',         dest='print_freq', 
-                        type=int,               default=10, 
-                        help='print freq')
-    parser.add_argument('--output_freq',        dest='output_freq', 
-                        type=int,               default=5, 
-                        help='output freq')
-    parser.add_argument('--save_freq',          dest='save_freq', 
-                        type=int,               default=5, 
-                        help='save checkpint freq')
     parser.add_argument('--batch_size',         dest='batch_size', 
                         type=int,               default=200, 
                         help='training batch size')
@@ -56,6 +51,16 @@ def parse_args():
     parser.add_argument('--rand',               dest='randomize', 
                         action='store_true', 
                         help='randomize (not use a fixed seed)')
+    # print and output settings
+    parser.add_argument('--print_freq',         dest='print_freq', 
+                        type=int,               default=10, 
+                        help='print freq')
+    parser.add_argument('--output_freq',        dest='output_freq', 
+                        type=int,               default=5, 
+                        help='output freq')
+    parser.add_argument('--save_freq',          dest='save_freq', 
+                        type=int,               default=5, 
+                        help='save checkpint freq')
     # evaluation settings
     parser.add_argument('--eval_model',         dest='eval_model', 
                         type=str,               default=None, 
@@ -76,7 +81,7 @@ def parse_args():
     parser.add_argument('--k',                  dest='k', 
                         type=int,               default=40, 
                         help='the number of PGD iterations used by the adversary')
-    parser.add_argument('--a',                  dest='a', 
+    parser.add_argument('--alpha',              dest='alpha', 
                         type=float,             default=0.01, 
                         help='the size of the PGD adversary steps')
     parser.add_argument('--random_start',       dest='random_start', 
