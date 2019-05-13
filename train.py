@@ -63,7 +63,7 @@ if __name__ == '__main__':
         is_cuda = True
 
     attack = LinfPGDAttack(model=model, epsilon=cfg.epsilon, k=cfg.k, 
-                           a=cfg.a, random_start=cfg.random_start)
+                           alpha=cfg.alpha, random_start=cfg.random_start)
     trainer = Trainer(model=model, attack=attack, optimizer=optimizer, 
                       summary_writer=summary_writer, is_cuda=True, 
                       output_freq=cfg.output_freq, print_freq=cfg.print_freq)
