@@ -19,7 +19,7 @@ from tensorboardX import SummaryWriter
 
 from Logging import Logger
 from config import cfg
-from model import Model
+from model import MnistModel as Model
 from trainer import Trainer
 from pgd_attack import LinfPGDAttack
 from utils import *
