@@ -82,11 +82,13 @@ class Trainer(object):
                     self.summary_writer.add_scalar('acc_iter', acc_meter.val, self.iter)
 
             if (i + 1) % self.print_freq == 0:
-                p_str = "Epoch:[{:>3d}][{:>3d}|{:>3d}] Time:[{:.3f}/{:.3f}]" \
-                        " Acc:[{:.3f}/{:.3f}] AdvAcc:[{:.3f}/{:.3f}]".format(
+                p_str = "Epoch:[{:>3d}][{:>3d}|{:>3d}] Time:[{:.3f}/{:.3f}] " \
+                        "Loss:[{:.3f}/{:.3f}] AdvLoss:[{:.3f}/{:.3f}] " \
+                        "Acc:[{:.3f}/{:.3f}] AdvAcc:[{:.3f}/{:.3f}] ".format(
                             epoch, i + 1, len(data_loader), batch_time.val, 
-                            adv_time.val, acc_meter.val, acc_meter.avg, 
-                            adv_acc_meter.val, adv_acc_meter.avg)
+                            adv_time.val, loss_meter.val, loss_meter.avg, 
+                            adv_loss_meter.val, adv_loss_meter.avg, acc_meter.val, 
+                            acc_meter.avg, adv_acc_meter.val, adv_acc_meter.avg)
                 print(p_str)
 
         if self.summary_writer is not None:
