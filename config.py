@@ -25,13 +25,16 @@ def parse_args():
     parser.add_argument('--no_log',             dest='no_log',
                         action='store_true',
                         help="if record logs (do not log)")
-    # dataset settings
+    # dataset and model settings
     parser.add_argument('--data_name',          dest='data_name', 
                         type=str,               default='mnist', 
                         help='used dataset')
     parser.add_argument('--data_dir',           dest='data_dir', 
                         type=str,               default='data/mnist', 
                         help='data directory')
+    parser.add_argument('--model_name',         dest='model_name', 
+                        type=str,               default='mnist', 
+                        help='network model')
     # training settings
     parser.add_argument('--max_epoch',          dest='max_epoch', 
                         type=int,               default=100, 
@@ -51,6 +54,12 @@ def parse_args():
     parser.add_argument('--rand',               dest='randomize', 
                         action='store_true', 
                         help='randomize (not use a fixed seed)')
+    parser.add_argument('--steps',              dest='steps', 
+                        type=str,               default='80,140,180', 
+                        help='epoches to decrease learning rate')
+    parser.add_argument('--decay_rate',         dest='decay_rate', 
+                        type=float,             default=0.1, 
+                        help='decay rate to decrease learning rate')
     # print and output settings
     parser.add_argument('--print_freq',         dest='print_freq', 
                         type=int,               default=10, 
@@ -91,3 +100,6 @@ def parse_args():
     return args
 
 cfg = parse_args()
+cfg.steps = [int(x) for x in cfg.steps.split(',')]
+if cfg.epsilon > 1: cfg.epsilon /= 255.
+if cfg.alpha > 1: cfg.alpha /= 255.
