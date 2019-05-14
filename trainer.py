@@ -16,7 +16,8 @@ from utils import AverageMeter
 class Trainer(object):
     """ Trainer to train adversarial attacting model """
     def __init__(self, model, attack, optimizer, summary_writer=None, 
-        print_freq=1, output_freq=1, is_cuda=True):
+        print_freq=1, output_freq=1, is_cuda=True, base_lr=0.001, 
+        max_epoch=100, steps=[], rate=1.):
         super(Trainer, self).__init__()
         self.model = model
         self.attack = attack
@@ -26,7 +27,11 @@ class Trainer(object):
         self.print_freq = print_freq
         self.output_freq = output_freq
         self.is_cuda = is_cuda
-
+        self.base_lr = base_lr
+        self.max_epoch = max_epoch
+        self.steps = steps
+        self.rate = rate
+        self.get_lr_mults()
 
     def train(self, epoch, data_loader):
         self.model.train()
@@ -38,6 +43,7 @@ class Trainer(object):
         acc_meter = AverageMeter()
         adv_acc_meter = AverageMeter()
 
+        self.decrease_lr(epoch)
         end = time.time()
         for i, data in enumerate(data_loader):
             x, y = data
@@ -111,3 +117,15 @@ class Trainer(object):
         self.iter = 0
         if self.summary_writer is not None:
             self.summary_writer.close()
+
+    def decrease_lr(self, epoch):
+        lr_mult = self.lr_mults[epoch]
+        for g in self.optimizer.param_groups:
+            g['lr'] = lr_mult * self.base_lr * g.get('lr_mult', 1.0)
+
+    def get_lr_mults(self):
+        self.lr_mults = np.ones(self.max_epoch)
+        self.steps = sorted(filter(lambda x: 0<x<self.max_epoch, self.steps))
+        if len(self.steps) > 0 and 0 < self.rate < 1.:
+            for step in self.steps:
+                self.lr_mults[step:] *= self.rate
