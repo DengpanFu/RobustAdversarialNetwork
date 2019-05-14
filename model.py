@@ -12,12 +12,103 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn import init
+from torchvision.models import resnet18, resnet34, resnet50
+
+class WideResNetBasicBlock(nn.Module):
+    def __init__(self, in_planes, out_planes, stride, dropRate=0.0):
+        super(WideResNetBasicBlock, self).__init__()
+        self.bn1 = nn.BatchNorm2d(in_planes)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+                               padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_planes)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1,
+                               padding=1, bias=False)
+        self.droprate = dropRate
+        self.equalInOut = (in_planes == out_planes)
+        self.convShortcut = (not self.equalInOut) and nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
+                               padding=0, bias=False) or None
+    def forward(self, x):
+        if not self.equalInOut:
+            x = self.relu1(self.bn1(x))
+        else:
+            out = self.relu1(self.bn1(x))
+        out = self.relu2(self.bn2(self.conv1(out if self.equalInOut else x)))
+        if self.droprate > 0:
+            out = F.dropout(out, p=self.droprate, training=self.training)
+        out = self.conv2(out)
+        return torch.add(x if self.equalInOut else self.convShortcut(x), out)
+
+class WideResNetBlock(nn.Module):
+    def __init__(self, nb_layers, in_planes, out_planes, block, stride, dropRate=0.0):
+        super(WideResNetBlock, self).__init__()
+        self.layer = self._make_layer(block, in_planes, out_planes, nb_layers, stride, dropRate)
+    def _make_layer(self, block, in_planes, out_planes, nb_layers, stride, dropRate):
+        layers = []
+        for i in range(int(nb_layers)):
+            layers.append(block(i == 0 and in_planes or out_planes, out_planes, i == 0 and stride or 1, dropRate))
+        return nn.Sequential(*layers)
+    def forward(self, x):
+        return self.layer(x)
+
+class WideResNet(nn.Module):
+    def __init__(self, depth=16, num_classes=10, widen_factor=10, dropRate=0.0):
+        super(WideResNet, self).__init__()
+        nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
+        assert((depth - 4) % 6 == 0)
+        n = (depth - 4) / 6
+        block = WideResNetBasicBlock
+        # 1st conv before any network block
+        self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
+                               padding=1, bias=False)
+        # 1st block
+        self.block1 = WideResNetBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)
+        # 2nd block
+        self.block2 = WideResNetBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
+        # 3rd block
+        self.block3 = WideResNetBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
+        # global average pooling and classifier
+        self.bn1 = nn.BatchNorm2d(nChannels[3])
+        self.relu = nn.ReLU(inplace=True)
+        self.fc = nn.Linear(nChannels[3], num_classes)
+        self.nChannels = nChannels[3]
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, np.sqrt(2. / n))
+                # init.kaiming_normal_(m.weight)
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                tmp = np.sqrt(3. / m.weight.data.shape[0])
+                m.weight.data.uniform_(-tmp, tmp)
+                m.bias.data.zero_()
+                # init.kaiming_normal_(m.weight)
+                # init.constant_(m.bias, 0)
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.block1(out)
+        out = self.block2(out)
+        out = self.block3(out)
+        out = self.relu(self.bn1(out))
+        out = F.avg_pool2d(out, 8)
+        out = out.view(-1, self.nChannels)
+        return self.fc(out)
+
+def wideresnet16(**kwargs):
+    return WideResNet(depth=16, **kwargs)
+
+def wideresnet22(**kwargs):
+    return WideResNet(depth=22, **kwargs)
 
 
-class Model(nn.Module):
-    """ Construct basic model for mnist adversal attack """
+class MnistModel(nn.Module):
+    """ Construct basic MnistModel for mnist adversal attack """
     def __init__(self, re_init=False, has_dropout=False):
-        super(Model, self).__init__()
+        super(MnistModel, self).__init__()
         self.re_init = re_init
         self.has_dropout = has_dropout
         self.conv1 = nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2)
@@ -59,3 +150,28 @@ class Model(nn.Module):
         init.normal_(module.weight, std=0.1)
         if hasattr(module, 'bias'):
             init.constant_(module.bias, mean)
+
+__factory = {
+    # resnet series, kwargs: num_classes
+    'resnet': resnet18, 
+    'resnet18': resnet18, 
+    'resnet34': resnet34, 
+    'resnet50': resnet50, 
+    # wideresnet series, kwargs: num_classes, widen_factor, dropRate
+    'wide': wideresnet16, 
+    'wideresnet': wideresnet16, 
+    'wideresnet16': wideresnet16, 
+    'wideresnet22': wideresnet22, 
+    # mnist, kwargs: has_dropout
+    'mnist': MnistModel, 
+}
+
+def create_model(name, **kwargs):
+    assert(name in __factory), 'invalid network'
+    return __factory[name](**kwargs)
+
+
+if __name__ == '__main__':
+    net = create_model('wide')
+    import pdb; pdb.set_trace()  # breakpoint 2e2204d9 //
+
