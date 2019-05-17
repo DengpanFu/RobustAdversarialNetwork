@@ -32,7 +32,9 @@ class LinfPGDAttack(object):
             x_adv = x + x.new(x.size()).uniform_(-self.epsilon, self.epsilon)
         else:
             x_adv = x.clone()
-
+        training = self.model.training
+        if training:
+            self.model.eval()
         for i in range(self.k):
             x_adv.requires_grad_()
             pred = F.cross_entropy(self.model(x_adv), y)
@@ -45,7 +47,8 @@ class LinfPGDAttack(object):
             x_adv = torch.min(torch.max(x_adv, x - self.epsilon), x + self.epsilon)
             
             x_adv.clamp_(0, 1)
-
+        if training:
+            self.model.train()
         return x_adv
 
 if __name__ == '__main__':
