@@ -91,6 +91,8 @@ class Trainer(object):
                             acc_meter.avg, adv_acc_meter.val, adv_acc_meter.avg)
                 print(p_str)
 
+            self.iter += 1
+
         if self.summary_writer is not None:
             self.summary_writer.add_scalar('loss_epoch', loss_meter.avg, epoch)
             self.summary_writer.add_scalar('adv_loss_epoch', adv_loss_meter.avg, epoch)
