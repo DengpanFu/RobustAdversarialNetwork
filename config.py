@@ -100,6 +100,10 @@ def parse_args():
     return args
 
 cfg = parse_args()
-cfg.steps = [int(x) for x in cfg.steps.split(',')]
+cfg.steps = cfg.steps.replace('[', '').replace(']', '')
+if cfg.steps:
+    cfg.steps = [int(x) for x in cfg.steps.split(',') if x.isdigit()]
+else:
+    cfg.steps = []
 if cfg.epsilon > 1: cfg.epsilon /= 255.
 if cfg.alpha > 1: cfg.alpha /= 255.
