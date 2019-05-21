@@ -83,7 +83,7 @@ class MIFGSM(object):
             pred.backward()
             x_grad = x_adv.grad.data
             # norm = torch.mean(torch.abs(x_grad).view((x_grad.shape[0], -1)), dim=1).view((-1, 1, 1, 1))
-            norm = x.abs().mean(dim=(1, 2, 3), keepdim=True)
+            norm = x_grad.abs().mean(dim=(1, 2, 3), keepdim=True)
             norm.clamp_(min=self.eps)
             x_grad /= norm
             grad = x_grad if grad is None else self.mu * grad + x_grad
