@@ -84,6 +84,9 @@ def parse_args():
                         action='store_true',
                         help="if eval on cpu (do not on cpu)")
     # adversarial examples settings
+    parser.add_argument('--attack_method',      dest='attack_method', 
+                        type=str,               default='pgd', 
+                        help='attacking method: pgd | mifgsm')
     parser.add_argument('--epsilon',            dest='epsilon', 
                         type=float,             default=0.3, 
                         help='the maximum allowed perturbation per pixel')
@@ -93,6 +96,9 @@ def parse_args():
     parser.add_argument('--alpha',              dest='alpha', 
                         type=float,             default=0.01, 
                         help='the size of the PGD adversary steps')
+    parser.add_argument('--mu',                 dest='mu', 
+                        type=float,             default=1.0, 
+                        help='Moment for MIGFSM method')
     parser.add_argument('--random_start',       dest='random_start', 
                         action='store_false', 
                         help='if random start')

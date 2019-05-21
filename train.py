@@ -22,7 +22,7 @@ from config import cfg
 from model import create_model
 from trainer import Trainer
 from evaluator import Evaluator
-from pgd_attack import LinfPGDAttack
+from pgd_attack import create_attack
 from utils import *
 
 
@@ -65,14 +65,16 @@ if __name__ == '__main__':
         model = model.cuda()
         is_cuda = True
 
-    attack = LinfPGDAttack(model=model, epsilon=cfg.epsilon, k=cfg.k, 
-                           alpha=cfg.alpha, random_start=cfg.random_start)
+    attack = create_attack(attack_method=cfg.attack_method.lower(), model=model, 
+                           epsilon=cfg.epsilon, k=cfg.k, alpha=cfg.alpha, 
+                           mu=cfg.mu, random_start=cfg.random_start)
+
     trainer = Trainer(model=model, attack=attack, optimizer=optimizer, 
                       summary_writer=summary_writer, is_cuda=True, 
                       output_freq=cfg.output_freq, print_freq=cfg.print_freq, 
                       base_lr=cfg.lr, max_epoch=cfg.max_epoch, 
                       steps=cfg.steps, rate=cfg.decay_rate)
-    evaluator = Evaluator(model=model, attack=attack, is_cuda=is_cuda, verbose=True)
+    evaluator = Evaluator(model=model, attack=attack, is_cuda=is_cuda, verbose=False)
 
     trainer.reset()
     for epoch in range(cfg.max_epoch):
